@@ -13,13 +13,13 @@ README = (HERE / "README.md").read_text()
 # This call to setup() does all the work
 setup(
     name="scikit-risk",
-    version="1.0.0",
+    version="0.0.1",
     description=description,
     long_description=README,
     long_description_content_type="text/markdown",
-    url="https://github.com/realpython/reader",
+    url="https://github.com/qu4nt/scikit-risk",
     author="qu4nt",
-    author_email="hola@qu4nt.com",
+    author_email="team@qu4nt.com",
     license="GPLv3+",
     classifiers=['Development Status :: 4 - Beta',
 		     'Intended Audience :: Business/Engineering',
@@ -34,5 +34,10 @@ setup(
 		     'Topic :: Software Development',
 		     'Topic :: Business/Engineering',
 		     ],
+    project_urls={
+        'Documentation': '',
+        'Funding': 'https://python.org/psf/',
+        'Source': '',
+    },
     packages=find_packages()
 )

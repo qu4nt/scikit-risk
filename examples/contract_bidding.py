@@ -17,6 +17,7 @@ from skrisk import RiskProject
 
 
 class ContractBiding(RiskProject):
+
     def num_competing_bids(self, num_competitors, prob_competitors):
         return self.binomial(num_competitors, prob_competitors)
 
@@ -30,6 +31,11 @@ class ContractBiding(RiskProject):
                 np.full((4 - num_competing_bids[0],), np.inf),
             )
         )
+    def win_contract(self, competing_bids, my_bid):
+        return min(competing_bids) > my_bid
+
+    def profit(self, win_contract, my_bid, project_cost, bid_cost):
+        return (win_contract * (my_bid - project_cost)) - bid_cost
 
 
 # %%
@@ -61,4 +67,28 @@ cb.add_operation(
     ("num_competing_bids"),
     # competing_bids,
     "Competing Bids",
+)
+cb.add_input(
+    "my_bid",
+    10500,
+    "Miller's bid"
+)
+cb.add_rand_input(
+    "project_cost",
+    "triangular",
+    {"left": 9000, "mode": 10000, "right": 15000}
+)
+cb.add_rand_input(
+    "bid_cost",
+    "triangular",
+    {"left": 300, "mode": 350, "right": 500}
+)
+cb.add_operation(
+    "win_contract",
+    ("competing_bids", "my_bid")
+)
+
+cb.add_goal(
+    "profit",
+    ("win_contract", "project_cost")
 )

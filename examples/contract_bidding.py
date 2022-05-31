@@ -1,0 +1,64 @@
+# %%
+import sys
+from pathlib import Path
+
+# %%
+BASE_DIR = Path.cwd().parent
+sys.path.append(f"{BASE_DIR}")
+
+# %%
+import numpy as np
+import pandas as pd
+
+# %%
+from skrisk import RiskProject
+
+# %%
+
+
+class ContractBiding(RiskProject):
+    def num_competing_bids(self, num_competitors, prob_competitors):
+        return self.binomial(num_competitors, prob_competitors)
+
+    def competing_bids(
+        self, param_competitors, num_competitors, project_cost, num_competing_bids
+    ):
+        return np.concatenate(
+            (
+                self.triangular(**param_competitors, size=num_competitors)
+                * project_cost["mode"],
+                np.full((4 - num_competing_bids[0],), np.inf),
+            )
+        )
+
+
+# %%
+
+cb = ContractBiding()
+
+cb.add_input("num_competitors", 4, "Number of Potential Competitors")
+cb.add_input("prob_competitors", 0.5, "Probability a given competitor bids")
+cb.add_rand_input(
+    "bid_cost",
+    "triangular",
+    {"left": 300, "mode": 350, "right": 500},
+    "Cost to prepare a bid",
+)
+cb.add_rand_input(
+    "project_cost",
+    "triangular",
+    {"left": 9000, "mode": 10000, "right": 15000},
+    "Cost to complete project",
+)
+cb.add_operation(
+    "num_competing_bids",
+    ("num_competitors", "prob_competitors"),
+    # num_competing_bids,
+    "Number of competing bids",
+)
+cb.add_operation(
+    "competing_bids",
+    ("num_competing_bids"),
+    # competing_bids,
+    "Competing Bids",
+)

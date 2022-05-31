@@ -18,7 +18,7 @@ class RiskProject(nx.DiGraph):
     def seed(self):
         return self._seed
 
-    @property.setter
+    @seed.setter
     def seed(self, new_seed):
         self._seed = new_seed
         self.rng = default_rng(new_seed)
@@ -29,9 +29,10 @@ class RiskProject(nx.DiGraph):
     def triangular(self, left, mode, right):
         return self.rng.triangular(left, mode, right, self.nsim)
 
-
     def add_input(self, name, value, description=""):
-        self.add_node(name, {"value": value, "description": description})
+        self.add_node(
+            name, {"value": value, "description": description, "node_type": "input"}
+        )
 
     def add_rand_input(self, name, distribution, parameters, description=""):
         self.add_node(
@@ -40,6 +41,7 @@ class RiskProject(nx.DiGraph):
                 "distribution": distribution,
                 "parameters": parameters,
                 "description": description,
+                "node_type": "rand_input",
             },
         )
 
@@ -50,6 +52,7 @@ class RiskProject(nx.DiGraph):
                 "incoming_nodes": incoming_nodes,
                 "condition": condition,
                 "description": description,
+                "node_type": "decision",
             },
         )
         for node in incoming_nodes:
@@ -59,9 +62,10 @@ class RiskProject(nx.DiGraph):
         self.add_node(
             name,
             {
-                "incoming_nodes": incoming_nodes,
                 "operation": operation,
+                "incoming_nodes": incoming_nodes,
                 "description": description,
+                "node_type": "operation",
             },
         )
         for node in incoming_nodes:
@@ -74,6 +78,7 @@ class RiskProject(nx.DiGraph):
                 "incoming_nodes": incoming_nodes,
                 "operation": operation,
                 "description": description,
+                "node_type": "goal",
             },
         )
         for node in incoming_nodes:

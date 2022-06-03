@@ -85,10 +85,16 @@ cb.add_rand_input(
 )
 cb.add_operation(
     "win_contract",
-    ("competing_bids", "my_bid")
+    ("competing_bids", "my_bid"),
+    "win_contract"
 )
 
 cb.add_goal(
     "profit",
-    ("win_contract", "project_cost")
+    ("win_contract", "project_cost"),
+    "profit"
 )
+# %%
+cb.eval('profit')
+
+# %%

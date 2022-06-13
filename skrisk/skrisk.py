@@ -24,7 +24,7 @@ class RiskProject(nx.DiGraph):
         self._seed = new_seed
         self.rng = default_rng(new_seed)
 
-    def binomial(self, n, p):
+    def binomial(self, n, p):  # TODO Add distributions as mixins
         return self.rng.binomial(n, p, self.nsim)
 
     def triangular(self, left, mode, right):
@@ -35,14 +35,15 @@ class RiskProject(nx.DiGraph):
             name, **{"value": value, "description": description, "node_type": "input"}
         )
 
-    def add_rand_input(self, name, distribution, parameters, description=""):
+    def add_random(self, name, distribution, parameters, description=""):
         self.add_node(
             name,
             **{
+                "value": None,
                 "distribution": distribution,
                 "parameters": parameters,
                 "description": description,
-                "node_type": "rand_input",
+                "node_type": "random",
             },
         )
 
@@ -50,8 +51,9 @@ class RiskProject(nx.DiGraph):
         self.add_node(
             name,
             **{
-                "incoming_nodes": incoming_nodes,
+                "value": None,
                 "condition": condition,
+                "incoming_nodes": incoming_nodes,
                 "description": description,
                 "node_type": "decision",
             },
@@ -59,10 +61,11 @@ class RiskProject(nx.DiGraph):
         for node in incoming_nodes:
             self.add_edge(node, name)
 
-    def add_operation(self, name, incoming_nodes, operation, description=""):
+    def add_operation(self, name, operation, incoming_nodes, description=""):
         self.add_node(
             name,
             **{
+                "value": None,
                 "operation": operation,
                 "incoming_nodes": incoming_nodes,
                 "description": description,
@@ -72,12 +75,13 @@ class RiskProject(nx.DiGraph):
         for node in incoming_nodes:
             self.add_edge(node, name)
 
-    def add_goal(self, name, incoming_nodes, operation, description=""):
+    def add_goal(self, name, operation, incoming_nodes, description=""):
         self.add_node(
             name,
             **{
-                "incoming_nodes": incoming_nodes,
+                "value": None,
                 "operation": operation,
+                "incoming_nodes": incoming_nodes,
                 "description": description,
                 "node_type": "goal",
             },
@@ -86,20 +90,23 @@ class RiskProject(nx.DiGraph):
             self.add_edge(node, name)
 
     def validate_inputs(self):
-        pass
+        return all([not self.in_degree(node) for node in self.input_nodes()])
 
     def validate_goals(self):
         pass
 
     def input_nodes(self):
-        return [
-            node
-            for node in self.nodes
-            if self.nodes[node]["node_type"] == "input"[node]
-        ]
+        return [node for node in self.nodes if self.nodes[node]["node_type"] == "input"]
+
+    def random_nodes(self):
+        return [node for node in self.nodes if self.nodes[node]["node_type"] == "random"]
 
     def eval(self, node):
         if node in self.input_nodes():
+            return self.nodes[node]["value"]
+        elif node in self.random_nodes():
+            func = getattr(self, self.nodes[node]["distribution"])
+            self.nodes[node]["value"] = func(**(self.nodes[node]["parameters"]))
             return self.nodes[node]["value"]
         else:
             param = {pred: self.eval(pred) for pred in self.predecessors(node)}

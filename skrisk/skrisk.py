@@ -1,6 +1,8 @@
 import networkx as nx
+import pandas as pd
+import numpy as np
+from scipy.stats import skew, kurtosis
 from numpy.random import default_rng
-
 
 class RiskProject(nx.DiGraph):
     """_summary_
@@ -113,6 +115,44 @@ class RiskProject(nx.DiGraph):
             func = getattr(self, self.nodes[node]["operation"])
             self.nodes[node]["value"] = func(**param)
             return self.nodes[node]["value"]
+
+    def generate_stats(self, node):
+        stats = {
+                "mean": np.mean(self.nodes[node]["value"], axis=0),
+                "max": np.max(self.nodes[node]["value"], axis=0),
+                "min": np.min(self.nodes[node]["value"], axis=0),
+                "std": np.std(self.nodes[node]["value"], axis=0),
+                "median": np.median(self.nodes[node]["value"], axis=0),
+                "skew": skew(self.nodes[node]["value"]),
+                "kurt": kurtosis(self.nodes[node]["value"])
+                }
+        self.nodes[node]["stats"] = stats
+        return
+        # go into node and process values
+        # generate and set different stats within the stats dictionary in the node
+
+    def print_stats(self, node, include=None):
+        # Prints all items stored in the self.nodes[node]["stats"] dictionary
+        # include parameter takes a list of the only keys to be printed, useful for comparing only specific values
+        longesti = 0
+        longestj = 0
+        for i,j in self.nodes[node]["stats"].items():
+            if len(i) > longesti:
+                longesti = len(i)
+            if len(str(j)) > longestj:
+                longestj = len(str(j))
+        fullwidth = longesti + longestj + 3
+        print(('Stats for ' + node).center(fullwidth))
+        print('-' * fullwidth)
+        if include != None:
+            for i in include:
+                print(str(i).ljust(longesti) + " # " + str(self.nodes[node]["stats"][i]).rjust(longestj))
+        else:
+            for i,j in self.nodes[node]["stats"].items():
+                print(str(i).ljust(longesti) + " # " + str(j).rjust(longestj))
+        return
+        # go into node and process stats
+        # print out pretty looking tables
 
     def run(self):
         pass

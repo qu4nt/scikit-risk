@@ -105,7 +105,9 @@ class RiskProject(nx.DiGraph):
         return [node for node in self.nodes if self.nodes[node]["node_type"] == "input"]
 
     def random_nodes(self):
-        return [node for node in self.nodes if self.nodes[node]["node_type"] == "random"]
+        return [
+            node for node in self.nodes if self.nodes[node]["node_type"] == "random"
+        ]
 
     def eval(self, node):
         if node in self.input_nodes():
@@ -122,14 +124,14 @@ class RiskProject(nx.DiGraph):
 
     def generate_stats(self, node):
         stats = {
-                "mean": np.mean(self.nodes[node]["value"], axis=0),
-                "max": np.max(self.nodes[node]["value"], axis=0),
-                "min": np.min(self.nodes[node]["value"], axis=0),
-                "std": np.std(self.nodes[node]["value"], axis=0),
-                "median": np.median(self.nodes[node]["value"], axis=0),
-                "skew": skew(self.nodes[node]["value"]),
-                "kurt": kurtosis(self.nodes[node]["value"])
-                }
+            "mean": np.mean(self.nodes[node]["value"], axis=0),
+            "max": np.max(self.nodes[node]["value"], axis=0),
+            "min": np.min(self.nodes[node]["value"], axis=0),
+            "std": np.std(self.nodes[node]["value"], axis=0),
+            "median": np.median(self.nodes[node]["value"], axis=0),
+            "skew": skew(self.nodes[node]["value"]),
+            "kurt": kurtosis(self.nodes[node]["value"]),
+        }
         self.nodes[node]["stats"] = stats
         return
         # go into node and process values
@@ -140,26 +142,30 @@ class RiskProject(nx.DiGraph):
         # include parameter takes a list of the only keys to be printed, useful for comparing only specific values
         longesti = 0
         longestj = 0
-        for i,j in self.nodes[node]["stats"].items():
+        for i, j in self.nodes[node]["stats"].items():
             if len(i) > longesti:
                 longesti = len(i)
             if len(str(j)) > longestj:
                 longestj = len(str(j))
         fullwidth = longesti + longestj + 3
-        print(('Stats for ' + node).center(fullwidth))
-        print('-' * fullwidth)
+        print(("Stats for " + node).center(fullwidth))
+        print("-" * fullwidth)
         if include != None:
             for i in include:
-                print(str(i).ljust(longesti) + " # " + str(self.nodes[node]["stats"][i]).rjust(longestj))
+                print(
+                    str(i).ljust(longesti)
+                    + " # "
+                    + str(self.nodes[node]["stats"][i]).rjust(longestj)
+                )
         else:
-            for i,j in self.nodes[node]["stats"].items():
+            for i, j in self.nodes[node]["stats"].items():
                 print(str(i).ljust(longesti) + " # " + str(j).rjust(longestj))
         return
         # go into node and process stats
         # print out pretty looking tables
 
     def generate_histogram(self, node, bins=10, save_histogram_file=False):
-        """Generates a histogram for a node. """
+        """Generates a histogram for a node."""
         i = 1
         while os.path.exists(f"{node}_histogram_{i}.png"):
             i += 1

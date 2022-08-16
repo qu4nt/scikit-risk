@@ -3,6 +3,10 @@ import pandas as pd
 import numpy as np
 from scipy.stats import skew, kurtosis
 from numpy.random import default_rng
+import os
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 
 class RiskProject(nx.DiGraph):
     """_summary_
@@ -153,6 +157,17 @@ class RiskProject(nx.DiGraph):
         return
         # go into node and process stats
         # print out pretty looking tables
+
+    def generate_histogram(self, node, bins=10, save_histogram_file=False):
+        """Generates a histogram for a node. """
+        i = 1
+        while os.path.exists(f"{node}_histogram_{i}.png"):
+            i += 1
+        sns.set_style("darkgrid")
+        sns.histplot(self.nodes[node]["value"], bins=bins)
+        if save_histogram_file:
+            plt.savefig(f"{node}_histogram_{i}.png")
+        plt.figure()
 
     def run(self):
         pass

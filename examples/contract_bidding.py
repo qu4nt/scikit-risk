@@ -99,6 +99,9 @@ plt.savefig('millers_bid.png')
 plt.figure()
 
 # %%
+cb.generate_histogram("profit", bins=30, save_histogram_file=True)
+
+# %%
 pos = nx.nx_pydot.pydot_layout(cb, prog="dot")
 nx.draw(cb, pos=pos, with_labels=True, font_weight="bold")
 plt.savefig('millers_problem.png')

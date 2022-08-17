@@ -1,8 +1,12 @@
+import os
+
+import matplotlib.pyplot as plt
 import networkx as nx
-import pandas as pd
 import numpy as np
-from scipy.stats import skew, kurtosis
+import seaborn as sns
 from numpy.random import default_rng
+from scipy.stats import skew, kurtosis
+
 
 class RiskProject(nx.DiGraph):
     """_summary_
@@ -101,7 +105,9 @@ class RiskProject(nx.DiGraph):
         return [node for node in self.nodes if self.nodes[node]["node_type"] == "input"]
 
     def random_nodes(self):
-        return [node for node in self.nodes if self.nodes[node]["node_type"] == "random"]
+        return [
+            node for node in self.nodes if self.nodes[node]["node_type"] == "random"
+        ]
 
     def eval(self, node):
         if node in self.input_nodes():
@@ -118,14 +124,14 @@ class RiskProject(nx.DiGraph):
 
     def generate_stats(self, node):
         stats = {
-                "mean": np.mean(self.nodes[node]["value"], axis=0),
-                "max": np.max(self.nodes[node]["value"], axis=0),
-                "min": np.min(self.nodes[node]["value"], axis=0),
-                "std": np.std(self.nodes[node]["value"], axis=0),
-                "median": np.median(self.nodes[node]["value"], axis=0),
-                "skew": skew(self.nodes[node]["value"]),
-                "kurt": kurtosis(self.nodes[node]["value"])
-                }
+            "mean": np.mean(self.nodes[node]["value"], axis=0),
+            "max": np.max(self.nodes[node]["value"], axis=0),
+            "min": np.min(self.nodes[node]["value"], axis=0),
+            "std": np.std(self.nodes[node]["value"], axis=0),
+            "median": np.median(self.nodes[node]["value"], axis=0),
+            "skew": skew(self.nodes[node]["value"]),
+            "kurt": kurtosis(self.nodes[node]["value"]),
+        }
         self.nodes[node]["stats"] = stats
         return
         # go into node and process values
@@ -136,23 +142,60 @@ class RiskProject(nx.DiGraph):
         # include parameter takes a list of the only keys to be printed, useful for comparing only specific values
         longesti = 0
         longestj = 0
-        for i,j in self.nodes[node]["stats"].items():
+        for i, j in self.nodes[node]["stats"].items():
             if len(i) > longesti:
                 longesti = len(i)
             if len(str(j)) > longestj:
                 longestj = len(str(j))
         fullwidth = longesti + longestj + 3
-        print(('Stats for ' + node).center(fullwidth))
-        print('-' * fullwidth)
+        print(("Stats for " + node).center(fullwidth))
+        print("-" * fullwidth)
         if include != None:
             for i in include:
-                print(str(i).ljust(longesti) + " # " + str(self.nodes[node]["stats"][i]).rjust(longestj))
+                print(
+                    str(i).ljust(longesti)
+                    + " # "
+                    + str(self.nodes[node]["stats"][i]).rjust(longestj)
+                )
         else:
-            for i,j in self.nodes[node]["stats"].items():
+            for i, j in self.nodes[node]["stats"].items():
                 print(str(i).ljust(longesti) + " # " + str(j).rjust(longestj))
         return
         # go into node and process stats
         # print out pretty looking tables
+
+    def generate_histogram(
+        self,
+        node,
+        set_style: str = "darkgrid",
+        title: str = "",
+        file_path="/tmp/skrisk/",
+        **kwargs,
+    ):
+        """Generates a histogram for a node."""
+        temp_file_path = self.__check_path(file_path)
+        hist_png_filename = self.__incremental_filename(node, temp_file_path)
+        sns.set_style(set_style)
+        sns.histplot(self.nodes[node]["value"], **kwargs).set(title=title)
+        plt.savefig(hist_png_filename)
+        print(f"Plot saved in file: {hist_png_filename}")
+        plt.figure()
+
+    @staticmethod
+    def __incremental_filename(node, temporal_path) -> str:
+        i = 1
+        hist_png_filename = f"{temporal_path}{node}_histogram_{i}.png"
+        while os.path.exists(hist_png_filename):
+            i += 1
+            hist_png_filename = f"{temporal_path}{node}_histogram_{i}.png"
+        return hist_png_filename
+
+    @staticmethod
+    def __check_path(path) -> str:
+        path = path
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
 
     def run(self):
         pass

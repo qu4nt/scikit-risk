@@ -99,7 +99,7 @@ plt.savefig('millers_bid.png')
 plt.figure()
 
 # %%
-cb.generate_histogram("profit", bins=30, save_histogram_file=True)
+cb.generate_histogram("profit", title="Millers Bid", bins=30, legend=True)
 
 # %%
 pos = nx.nx_pydot.pydot_layout(cb, prog="dot")

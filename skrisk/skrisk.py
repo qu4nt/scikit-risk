@@ -1,11 +1,11 @@
-import networkx as nx
-import pandas as pd
-import numpy as np
-from scipy.stats import skew, kurtosis
-from numpy.random import default_rng
 import os
-import seaborn as sns
+
 import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
+import seaborn as sns
+from numpy.random import default_rng
+from scipy.stats import skew, kurtosis
 
 
 class RiskProject(nx.DiGraph):
@@ -164,16 +164,38 @@ class RiskProject(nx.DiGraph):
         # go into node and process stats
         # print out pretty looking tables
 
-    def generate_histogram(self, node, bins=10, save_histogram_file=False):
+    def generate_histogram(
+        self,
+        node,
+        set_style: str = "darkgrid",
+        title: str = "",
+        file_path="/tmp/skrisk/",
+        **kwargs,
+    ):
         """Generates a histogram for a node."""
-        i = 1
-        while os.path.exists(f"{node}_histogram_{i}.png"):
-            i += 1
-        sns.set_style("darkgrid")
-        sns.histplot(self.nodes[node]["value"], bins=bins)
-        if save_histogram_file:
-            plt.savefig(f"{node}_histogram_{i}.png")
+        temp_file_path = self.__check_path(file_path)
+        hist_png_filename = self.__incremental_filename(node, temp_file_path)
+        sns.set_style(set_style)
+        sns.histplot(self.nodes[node]["value"], **kwargs).set(title=title)
+        plt.savefig(hist_png_filename)
+        print(f"Plot saved in file: {hist_png_filename}")
         plt.figure()
+
+    @staticmethod
+    def __incremental_filename(node, temporal_path) -> str:
+        i = 1
+        hist_png_filename = f"{temporal_path}{node}_histogram_{i}.png"
+        while os.path.exists(hist_png_filename):
+            i += 1
+            hist_png_filename = f"{temporal_path}{node}_histogram_{i}.png"
+        return hist_png_filename
+
+    @staticmethod
+    def __check_path(path) -> str:
+        path = path
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
 
     def run(self):
         pass

@@ -10,11 +10,11 @@ from scipy.stats import skew, kurtosis
 
 class RiskProject(nx.DiGraph):
     """
-    A class that represents and sets up a graph node used for visualizing and simulating risk management scenarios.
+    A class that represents and sets up a network used for visualizing and simulating risk management scenarios.
 
     Attributes:
         seed(int): Establishes the seed with which to perform all random operations.
-        nsim(int): Number of simulations to perform when evaluating the entire graph.
+        nsim(int): Number of simulations to perform when evaluating the entire network.
     """
 
     def __init__(self, seed=42, nsim=1000):
@@ -76,15 +76,15 @@ class RiskProject(nx.DiGraph):
 
     def add_random(self, name, distribution, parameters, description=""):
         """
-        Creates a node that randomly generates numbers inside a RiskProject.nsim-sized array according to the distribution specified when evaluated.
+        Creates a node that randomly generates observations inside a RiskProject.nsim-sized array according to the distribution specified when evaluated.
 
         Parameters:
             name
                 Name of the node.
             distribution
-                Name of the function (in the form of a string) whose result will be saved inside this node's value attribute when this node is evaluated.
+                Name of the function (in the form of a string) whose result will be saved inside this node value attribute when this node is evaluated.
             parameters
-                Parameters passed to the previously set function (in the form of a dictionary or tuple to be unpacked).
+                Parameters passed to the distribution (in the form of a dictionary or tuple to be unpacked).
             description
                 Additional information about the node.
         """
@@ -113,7 +113,7 @@ class RiskProject(nx.DiGraph):
             condition
                 Condition to be fulfilled for the decision node to return True.
             description
-                Additional information about the node.
+                Comprehensive summary about the node.
         """
         self.add_node(
             name,
@@ -130,7 +130,7 @@ class RiskProject(nx.DiGraph):
 
     def add_operation(self, name, operation, incoming_nodes, description=""):
         """
-        Creates a node that performs an operation on two other incoming nodes when evaluated.
+        Creates a node that performs an operation on incoming nodes when evaluated.
 
         Parameters:
             name
@@ -140,7 +140,7 @@ class RiskProject(nx.DiGraph):
             incoming_nodes
                 Tuple with names for the input nodes whose value(s) will be taken as parameters for the function.
             description
-                Additional information about the node.
+                Comprehensive summary about the node.
         """
         self.add_node(
             name,
@@ -167,7 +167,7 @@ class RiskProject(nx.DiGraph):
             incoming_nodes
                 Tuple with names for the input nodes whose value(s) will be taken as parameters for the function.
             description
-                Additional information about the node.
+                Comprehensive summary about the node.
         """
         self.add_node(
             name,
@@ -231,7 +231,7 @@ class RiskProject(nx.DiGraph):
         """
         **TODO: Add the functionality related to the ignore/additional parameters.
 
-        Generates an attribute with relevant statistics for a node using it's eval-generated value array.
+        Generate and add to the node an attribute named "stats" from its eval-generated value attribute.
         
         Parameters
             node

@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import seaborn as sns
+import snakemd
 from numpy.random import default_rng
 from scipy.stats import skew, kurtosis
 
@@ -32,7 +33,7 @@ class RiskProject(nx.DiGraph):
         self._seed = new_seed
         self.rng = default_rng(new_seed)
 
-    def binomial(self, n, p):  # TODO Add distributions as mixins
+    def binomial(self, n: int, p: float):  # TODO Add distributions as mixins
         """
         Returns a RiskProject.nsim-sized array of samples drawn from a binomial distribution.
 
@@ -44,7 +45,7 @@ class RiskProject(nx.DiGraph):
         """
         return self.rng.binomial(n, p, self.nsim)
 
-    def triangular(self, left, mode, right):
+    def triangular(self, left: float, mode: float, right: float):
         """
         Returns a RiskProject.nsim-sized array of randomly generated numbers using a triangular distribution.
 
@@ -58,7 +59,7 @@ class RiskProject(nx.DiGraph):
         """
         return self.rng.triangular(left, mode, right, self.nsim)
 
-    def add_input(self, name, value, description=""):
+    def add_input(self, name: str, value: float, description=""):
         """
         Creates a node that will return a fixed value when evaluated.
 
@@ -68,13 +69,13 @@ class RiskProject(nx.DiGraph):
             value
                 Value returned when the node is evaluated.
             description
-                Additional information about the node.
+                Comprehensive summary about the node.
         """
         self.add_node(
             name, **{"value": value, "description": description, "node_type": "input"}
         )
 
-    def add_random(self, name, distribution, parameters, description=""):
+    def add_random(self, name: str, distribution: str, parameters: tuple[str] | dict[str, object], description=""):
         """
         Creates a node that randomly generates observations inside a RiskProject.nsim-sized array according to the distribution specified when evaluated.
 
@@ -82,11 +83,11 @@ class RiskProject(nx.DiGraph):
             name
                 Name of the node.
             distribution
-                Name of the function (in the form of a string) whose result will be saved inside this node value attribute when this node is evaluated.
+                Name of the function whose result will be saved inside this node value attribute when this node is evaluated.
             parameters
-                Parameters passed to the distribution (in the form of a dictionary or tuple to be unpacked).
+                Parameters passed to the distribution.
             description
-                Additional information about the node.
+                Comprehensive summary about the node.
         """
         self.add_node(
             name,
@@ -99,11 +100,10 @@ class RiskProject(nx.DiGraph):
             },
         )
 
-    def add_decision(self, name, incoming_nodes, condition, parameters, description=""):
+    def add_decision(self, name:str, incoming_nodes: tuple[str], condition, parameters, description=""): 
+		# TODO: Decide whenever to scrap this method, or add related functionality in the eval method.
         """
-        **TODO: Decide whenever to scrap this method, or add related functionality in the eval method.
-
-        Creates a node that represents a decision point in the node graph.
+        Creates a node that represents a decision point in the network.
 
         Parameters:
             name
@@ -128,7 +128,7 @@ class RiskProject(nx.DiGraph):
         for node in incoming_nodes:
             self.add_edge(node, name)
 
-    def add_operation(self, name, operation, incoming_nodes, description=""):
+    def add_operation(self, name:str, operation:str, incoming_nodes:tuple[str], description=""):
         """
         Creates a node that performs an operation on incoming nodes when evaluated.
 
@@ -155,9 +155,9 @@ class RiskProject(nx.DiGraph):
         for node in incoming_nodes:
             self.add_edge(node, name)
 
-    def add_goal(self, name, operation, incoming_nodes, description=""):
+    def add_goal(self, name:str, operation:str, incoming_nodes:tuple[str], description=""):
         """
-        Creates a goal/output node, which serves as an endpoint of the graph.
+        Creates a goal/output node, which serves as an endpoint for the network.
 
         Parameters:
             name
@@ -184,14 +184,13 @@ class RiskProject(nx.DiGraph):
 
     def validate_inputs(self):
         """
-        Verifies if the input nodes in the graph have other nodes pointing towards them, returning True if so.
+
+        Verifies if the input nodes in the network have other nodes pointing towards them, returning True if so.
         """
         return all([not self.in_degree(node) for node in self.input_nodes()])
 
     def validate_goals(self):
-        """
-        TODO: Make this function return True if all the nodes with "goal" as their node_type are connected to other nodes in the graph only as outputs.
-        """
+        # TODO: Make this function return True if all the nodes with "goal" as their node_type are connected to other nodes in the graph only as outputs.
         pass
 
     def input_nodes(self):
@@ -204,9 +203,11 @@ class RiskProject(nx.DiGraph):
         """
         Returns a list of all the nodes whose node_type is "random".
         """
-        return [node for node in self.nodes if self.nodes[node]["node_type"] == "random"]
-
-    def eval(self, node):
+        return [
+            node for node in self.nodes if self.nodes[node]["node_type"] == "random"
+        ]
+        
+    def eval(self, node:str):
         """
         Fills out the "value" attribute of a node, doing the same for all other nodes pointing to it if necessary.
         This method uses the function name and parameters stored in the attributes of each node to generate the relevant RiskProject.nsim-sized arrays.
@@ -227,18 +228,17 @@ class RiskProject(nx.DiGraph):
             self.nodes[node]["value"] = func(**param)
             return self.nodes[node]["value"]
 
-     def generate_stats(self, node, ignore=None, additional=None):
+    def generate_stats(self, node:str, ignore=None, additional=None): 
+		# TODO: Add the functionality related to the ignore/additional parameters.
         """
-        **TODO: Add the functionality related to the ignore/additional parameters.
-
-        Generate and add to the node an attribute named "stats" from its eval-generated value attribute.
+        Generates and adds to the node an attribute named "stats" from its eval-generated value attribute.
         
         Parameters
             node
                 Name of the node whose statistics will be generated.
             ignore
                 List of names of the stats that you don't want to generate.
-            additional
+			      additional
                 List of tuples whose first value corresponds to the name of the statistics to be generated, and the second corresponds to the function used.
         """       
         stats = {
@@ -253,7 +253,7 @@ class RiskProject(nx.DiGraph):
         self.nodes[node]["stats"] = stats
         return
 
-    def print_stats(self, node):
+    def print_stats(self, node:str):
         """
         Prints the stats attribute of a node inside a table.
         
@@ -291,7 +291,21 @@ class RiskProject(nx.DiGraph):
         file_path="/tmp/skrisk/",
         **kwargs,
     ):
-        """Generates a histogram for a node."""
+        """
+        Generates a histogram for a node.
+
+        Parameters:
+            node
+                Node for which the histogram will be generated.
+            set_style
+                General style in which the plot will be generated.
+            title
+                Title for the histogram.
+            file_path
+                Path where the histogram will be generated.
+            **kwargs
+                Miscellaneous arguments for the seaborn.histplot() function.
+        """
         temp_file_path = self.__check_path(file_path)
         hist_png_filename = self.__incremental_filename(node, temp_file_path)
         sns.set_style(set_style)
@@ -315,6 +329,30 @@ class RiskProject(nx.DiGraph):
         if not os.path.exists(path):
             os.makedirs(path)
         return path
+
+    def generate_report(self, file, skip=[]):
+        """
+        Generates a Markdown report for the current network.
+
+        Parameters:
+            file
+                Name of the .md file to be generated.
+            skip
+                A tuple with the names of the nodes generate_report will skip.
+        """
+        report = snakemd.new_doc(file)
+        for node in self.nodes():
+            report.add_table_of_contents()
+            if node not in skip and self.nodes[node]["node_type"] != "input":
+                report.add_header(node)
+                self.generate_histogram(node, title=node, file_path="./", bins=30, legend=True)
+                img = [
+                        snakemd.InlineText("", url=("./" + node + "_histogram_1.png"), image=True)
+                ]
+                report.add_element(snakemd.Paragraph(img))
+                report.add_paragraph(self.nodes[node]["description"])
+        report.output_page()
+        return report
 
     def run(self):
         pass

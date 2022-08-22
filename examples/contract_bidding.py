@@ -1,14 +1,7 @@
 # %%
-import sys
-from pathlib import Path
-
 import matplotlib.pyplot as plt
 import networkx as nx
 import seaborn as sns
-
-# %%
-BASE_DIR = Path.cwd()
-sys.path.append(f"{BASE_DIR}")
 
 # %%
 import numpy as np

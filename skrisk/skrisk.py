@@ -15,7 +15,7 @@ class RiskProject(nx.DiGraph):
 
     Attributes:
         seed(int): Establishes the seed with which to perform all random operations.
-        nsim(int): Number of simulations to perform when evaluating the entire graph.
+        nsim(int): Number of simulations to perform when evaluating the entire network.
     """
 
     def __init__(self, seed=42, nsim=1000):
@@ -113,7 +113,7 @@ class RiskProject(nx.DiGraph):
             condition
                 Condition to be fulfilled for the decision node to return True.
             description
-                Additional information about the node.
+                Comprehensive summary about the node.
         """
         self.add_node(
             name,
@@ -184,6 +184,7 @@ class RiskProject(nx.DiGraph):
 
     def validate_inputs(self):
         """
+
         Verifies if the input nodes in the network have other nodes pointing towards them, returning True if so.
         """
         return all([not self.in_degree(node) for node in self.input_nodes()])
@@ -237,7 +238,7 @@ class RiskProject(nx.DiGraph):
                 Name of the node whose statistics will be generated.
             ignore
                 List of names of the stats that you don't want to generate.
-			additional
+			      additional
                 List of tuples whose first value corresponds to the name of the statistics to be generated, and the second corresponds to the function used.
         """       
         stats = {

@@ -1,50 +1,41 @@
-# scikit-risk
+# Scikit Risk
+
 A python library to perform Monte Carlo probabilistic modeling and risk analysis.
 
-## Installation from sources
-In the root directory of the package, just do:
+## Installation
 
-```python setup.py install```
+Preferably, create a virtual environment and install scikit-risk by running
 
-## Distribution
-A scikit-risk is a standard Python package, which can be distributed by a number of different means:
+pip install scikit-risk
 
-### Source distribution
-To prepare a source distribution of the package:
+Note that scikit-risk is only available in python 3.
 
-```python setup.py sdist```
+We are currently in active development so we are aiming for the latest versions of each dependency. As soon as a stable version is established, dependencies with particular versions will be indicated.
 
-### Eggs
-Eggs are a format for easy distribution of pre-built packages. It is cross-platform for packages without any C code, and platform specific otherwise. To build an egg:
+## Setup a development environment
 
-```python setup.py bdist_egg```
+Two things to note for those wishing to participate in scikit-risk development:
 
-### Binary installers
-Binary installers are platform specific. On Windows, you can do:
+1. [Github flow](https://docs.github.com/es/get-started/quickstart/github-flow) is being used as a working method.
+   
+   That is, you create a project fork from https://github.com/qu4nt/scikit-risk, to propose any change you create a new branch from this repository and add a Pull Request directly from this new branch.
 
-```python setup.py bdist_wininst```
-On Mac OS X (this requires an extension, bdist_mpkg, available on Pypi):
+2. To create a development environment you have to clone the repository locally, create a development environment, activate it, and run:
 
-```python setup.py bdist_mpkg```
+    ```bash
+    pip install -e .
+    ```
 
-## Registration onto PyPi
-A Scikit should be registered to PyPi, the Python package index. This will make it easier for people to find and download the package, and moreover it will list the package in the Scikits index: http://scikits.appspot.com/scikits
+    From the root folder of scikit-risk
 
-For more information, see the PyPi tutorial
+## Authors
 
-To register a package on PyPi and upload the sources at the same time:
+Team qu4nt
 
-```python setup.py register sdist upload```
-You can also upload the files manually using the forms on the PyPi web page: https://pypi.python.org/
+* Francisco Palm, fpalm@qu4nt.com
+* Rainer Palm, rpalm@qu4nt.com
+* Lino Urdaneta, lurdaneta@qu4nt.com
+* Mariangela Petrizzo, mpetrizzo@qu4nt.com
+* Adriana Tiso, atiso@qu4nt.com
 
-Binary distributions as eggs can also be uploaded to pypi. For example:
-
-```python setup.py bdist_egg upload```
-Once a source or binary distribution is uploaded to PyPi, people can simply install it with either with pip or with easy_install:
-
-```pip scikit-risk```
-easy_install scikit-risk
-If you don't want to install as an egg, but from the sources:
-
-```easy_install -eNb example scikit-risk```
-Will download the most recent sources, and extract them into the example directory.
+You?

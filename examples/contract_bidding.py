@@ -79,6 +79,7 @@ cb.add_operation(
     "win_contract",
     ("competing_bids", "my_bid"),
     "Miller wins contract?",
+    "pie",
 )
 
 cb.add_goal(
@@ -92,7 +93,9 @@ plt.savefig('millers_bid.png')
 plt.figure()
 
 # %%
-cb.generate_histogram("profit", title="Millers Bid", bins=30, legend=True)
+cb.generate_stats("profit")
+cb.generate_stats("project_cost")
+cb.generate_report("MyReport","competing_bids")
 
 # %%
 pos = nx.nx_pydot.pydot_layout(cb, prog="dot")

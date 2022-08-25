@@ -5,6 +5,7 @@ import networkx as nx
 import numpy as np
 import seaborn as sns
 import snakemd
+import collections
 from numpy.random import default_rng
 from scipy.stats import skew, kurtosis
 
@@ -75,7 +76,7 @@ class RiskProject(nx.DiGraph):
             name, **{"value": value, "description": description, "node_type": "input"}
         )
 
-    def add_random(self, name: str, distribution: str, parameters: tuple[str] | dict[str, object], description=""):
+    def add_random(self, name: str, distribution: str, parameters: tuple[str] | dict[str, object], description="", graphtype="histogram"):
         """
         Creates a node that randomly generates observations inside a RiskProject.nsim-sized array according to the distribution specified when evaluated.
 
@@ -97,6 +98,8 @@ class RiskProject(nx.DiGraph):
                 "parameters": parameters,
                 "description": description,
                 "node_type": "random",
+                "stats" : None,
+                "graphtype" : graphtype,
             },
         )
 
@@ -128,7 +131,7 @@ class RiskProject(nx.DiGraph):
         for node in incoming_nodes:
             self.add_edge(node, name)
 
-    def add_operation(self, name:str, operation:str, incoming_nodes:tuple[str], description=""):
+    def add_operation(self, name:str, operation:str, incoming_nodes:tuple[str], description="", graphtype="histogram"):
         """
         Creates a node that performs an operation on incoming nodes when evaluated.
 
@@ -150,12 +153,14 @@ class RiskProject(nx.DiGraph):
                 "incoming_nodes": incoming_nodes,
                 "description": description,
                 "node_type": "operation",
+                "stats" : None,
+                "graphtype" : graphtype,
             },
         )
         for node in incoming_nodes:
             self.add_edge(node, name)
 
-    def add_goal(self, name:str, operation:str, incoming_nodes:tuple[str], description=""):
+    def add_goal(self, name:str, operation:str, incoming_nodes:tuple[str], description="", graphtype="histogram"):
         """
         Creates a goal/output node, which serves as an endpoint for the network.
 
@@ -177,6 +182,8 @@ class RiskProject(nx.DiGraph):
                 "incoming_nodes": incoming_nodes,
                 "description": description,
                 "node_type": "goal",
+                "stats" : None,
+                "graphtype" : graphtype,
             },
         )
         for node in incoming_nodes:
@@ -251,7 +258,7 @@ class RiskProject(nx.DiGraph):
             "kurt": kurtosis(self.nodes[node]["value"]),
         }
         self.nodes[node]["stats"] = stats
-        return
+        return stats
 
     def print_stats(self, node:str):
         """
@@ -282,7 +289,9 @@ class RiskProject(nx.DiGraph):
             for i, j in self.nodes[node]["stats"].items():
                 print(str(i).ljust(longesti) + " # " + str(j).rjust(longestj))
         return
-
+    
+    last_generated_graphic = "" # Variable where the location of the last generated graph is stored
+    
     def generate_histogram(
         self,
         node,
@@ -311,8 +320,45 @@ class RiskProject(nx.DiGraph):
         sns.set_style(set_style)
         sns.histplot(self.nodes[node]["value"], **kwargs).set(title=title)
         plt.savefig(hist_png_filename)
+        self.last_generated_graphic = hist_png_filename
         print(f"Plot saved in file: {hist_png_filename}")
         plt.figure()
+    
+    def generate_piechart(
+        self,
+        node,
+        set_style: str ="darkgrid",
+        set_palette: str = "bright",
+        title: str = "",
+        file_path="/tmp/skrisk/",
+        **kwargs,
+    ):
+        """
+        Generates a pie chart for a node.
+        """
+        temp_file_path = self.__check_path(file_path)
+        hist_png_filename = self.__incremental_filename(node, temp_file_path)
+
+        sns.set_style(set_style)
+        palette=sns.color_palette(set_palette)
+        
+        data, keys = self.__generate_repeats(self.nodes[node]["value"])
+        
+        plt.title(title)
+        plt.pie(data, labels=keys, colors=palette, autopct='%.0f%%', **kwargs)
+        plt.savefig(hist_png_filename)
+        self.last_generated_graphic = hist_png_filename
+        print(f"Plot saved in file: {hist_png_filename}")
+
+        plt.figure()
+
+    @staticmethod
+    def __generate_repeats(arr):
+        "Generates the amount of repetitions and names of values in an array in two arrays with matching indexes."
+        c = collections.Counter(arr)
+        myarr = [c[i] for i in c]
+        mylab = [str(i) for i in c]
+        return myarr, mylab
 
     @staticmethod
     def __incremental_filename(node, temporal_path) -> str:
@@ -329,10 +375,10 @@ class RiskProject(nx.DiGraph):
         if not os.path.exists(path):
             os.makedirs(path)
         return path
-
+    
     def generate_report(self, file, skip=[]):
         """
-        Generates a Markdown report for the current network.
+        Generates a Markdown report for the current network. Automatically appends the contents of markdown files with the same name as any of the network's nodes if there are any.
 
         Parameters:
             file
@@ -342,14 +388,31 @@ class RiskProject(nx.DiGraph):
         """
         report = snakemd.new_doc(file)
         for node in self.nodes():
-            report.add_table_of_contents()
             if node not in skip and self.nodes[node]["node_type"] != "input":
                 report.add_header(node)
-                self.generate_histogram(node, title=node, file_path="./", bins=30, legend=True)
+                if os.path.exists("./" + node + ".md"):
+                    nodeinfo = open(node + ".md",'r')
+                    report.add_paragraph(nodeinfo.read())
+
+                if self.nodes[node]["graphtype"] == "histogram":
+                    self.generate_histogram(node, title=node, file_path="./", bins=30, legend=True)
+                elif self.nodes[node]["graphtype"] == "pie":
+                    self.generate_piechart(node, title=node, file_path="./")
+
+                print(self.last_generated_graphic)
                 img = [
-                        snakemd.InlineText("", url=("./" + node + "_histogram_1.png"), image=True)
-                ]
+                        snakemd.InlineText("", url=self.last_generated_graphic, image=True)
+                ] 
                 report.add_element(snakemd.Paragraph(img))
+                
+                if self.nodes[node]["stats"] != None:
+                    report.add_table(
+                                ["Stats", "Values"],
+                                [
+                                [i,j] for i, j in self.nodes[node]["stats"].items()
+                                ]
+                            )
+                
                 report.add_paragraph(self.nodes[node]["description"])
         report.output_page()
         return report

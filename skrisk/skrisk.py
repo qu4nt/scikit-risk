@@ -60,6 +60,19 @@ class RiskProject(nx.DiGraph):
         """
         return self.rng.triangular(left, mode, right, self.nsim)
 
+    def gamma(self, shape, scale):
+        """
+        Returns a RiskProject.nsim-sized array of randomly generated numbers using a gamma distribution.
+
+        Parameters:
+            shape
+                Lower limit of the distribution. # TODO: Change this description!
+            scale
+                Most likely value of the distribution.
+
+        """
+        return self.rng.gamma(shape, scale, self.nsim)
+
     def add_input(self, name: str, value: float, description=""):
         """
         Creates a node that will return a fixed value when evaluated.
@@ -104,7 +117,7 @@ class RiskProject(nx.DiGraph):
         )
 
     def add_decision(self, name:str, incoming_nodes: tuple[str], condition, parameters, description=""): 
-		# TODO: Decide whenever to scrap this method, or add related functionality in the eval method.
+        # TODO: Decide whenever to scrap this method, or add related functionality in the eval method.
         """
         Creates a node that represents a decision point in the network.
 
@@ -236,7 +249,7 @@ class RiskProject(nx.DiGraph):
             return self.nodes[node]["value"]
 
     def generate_stats(self, node:str, ignore=None, additional=None): 
-		# TODO: Add the functionality related to the ignore/additional parameters.
+        # TODO: Add the functionality related to the ignore/additional parameters.
         """
         Generates and adds to the node an attribute named "stats" from its eval-generated value attribute.
         
@@ -245,7 +258,7 @@ class RiskProject(nx.DiGraph):
                 Name of the node whose statistics will be generated.
             ignore
                 List of names of the stats that you don't want to generate.
-			      additional
+                  additional
                 List of tuples whose first value corresponds to the name of the statistics to be generated, and the second corresponds to the function used.
         """       
         stats = {

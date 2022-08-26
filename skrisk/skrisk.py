@@ -24,6 +24,14 @@ class RiskProject(nx.DiGraph):
         self._seed = seed
         self.rng = default_rng(seed)
         self.nsim = nsim
+        self.plot_palette = [
+                            "#30a2da",
+                            "#fc4f30",
+                            "#e5ae38",
+                            "#6d904f",
+                            "#8b8b8b",
+                            ]
+        self.plot_style = "darkgrid"
 
     @property
     def seed(self):
@@ -59,6 +67,19 @@ class RiskProject(nx.DiGraph):
                 Upper limit of the distribution.
         """
         return self.rng.triangular(left, mode, right, self.nsim)
+
+    def gamma(self, shape, scale):
+        """
+        Returns a RiskProject.nsim-sized array of randomly generated numbers using a gamma distribution.
+
+        Parameters:
+            shape
+                Lower limit of the distribution. # TODO: Change this description!
+            scale
+                Most likely value of the distribution.
+
+        """
+        return self.rng.gamma(shape, scale, self.nsim)
 
     def add_input(self, name: str, value: float, description=""):
         """
@@ -104,7 +125,7 @@ class RiskProject(nx.DiGraph):
         )
 
     def add_decision(self, name:str, incoming_nodes: tuple[str], condition, parameters, description=""): 
-		# TODO: Decide whenever to scrap this method, or add related functionality in the eval method.
+        # TODO: Decide whenever to scrap this method, or add related functionality in the eval method.
         """
         Creates a node that represents a decision point in the network.
 
@@ -236,7 +257,7 @@ class RiskProject(nx.DiGraph):
             return self.nodes[node]["value"]
 
     def generate_stats(self, node:str, ignore=None, additional=None): 
-		# TODO: Add the functionality related to the ignore/additional parameters.
+        # TODO: Add the functionality related to the ignore/additional parameters.
         """
         Generates and adds to the node an attribute named "stats" from its eval-generated value attribute.
         
@@ -245,7 +266,7 @@ class RiskProject(nx.DiGraph):
                 Name of the node whose statistics will be generated.
             ignore
                 List of names of the stats that you don't want to generate.
-			      additional
+                  additional
                 List of tuples whose first value corresponds to the name of the statistics to be generated, and the second corresponds to the function used.
         """       
         stats = {
@@ -260,7 +281,7 @@ class RiskProject(nx.DiGraph):
         self.nodes[node]["stats"] = stats
         return stats
 
-    def print_stats(self, node:str):
+    def print_stats(self, node: str):
         """
         Prints the stats attribute of a node inside a table.
         
@@ -295,7 +316,6 @@ class RiskProject(nx.DiGraph):
     def generate_histogram(
         self,
         node,
-        set_style: str = "darkgrid",
         title: str = "",
         file_path="/tmp/skrisk/",
         **kwargs,
@@ -306,8 +326,6 @@ class RiskProject(nx.DiGraph):
         Parameters:
             node
                 Node for which the histogram will be generated.
-            set_style
-                General style in which the plot will be generated.
             title
                 Title for the histogram.
             file_path
@@ -317,7 +335,8 @@ class RiskProject(nx.DiGraph):
         """
         temp_file_path = self.__check_path(file_path)
         hist_png_filename = self.__incremental_filename(node, temp_file_path)
-        sns.set_style(set_style)
+        sns.set_style(self.plot_style)
+        sns.set_palette(self.plot_palette)
         sns.histplot(self.nodes[node]["value"], **kwargs).set(title=title)
         plt.savefig(hist_png_filename)
         self.last_generated_graphic = hist_png_filename
@@ -327,8 +346,6 @@ class RiskProject(nx.DiGraph):
     def generate_piechart(
         self,
         node,
-        set_style: str ="darkgrid",
-        set_palette: str = "bright",
         title: str = "",
         file_path="/tmp/skrisk/",
         **kwargs,
@@ -339,8 +356,9 @@ class RiskProject(nx.DiGraph):
         temp_file_path = self.__check_path(file_path)
         hist_png_filename = self.__incremental_filename(node, temp_file_path)
 
-        sns.set_style(set_style)
-        palette=sns.color_palette(set_palette)
+        sns.set_style(self.plot_style)
+        sns.set_palette(self.plot_palette)
+        palette = sns.color_palette(self.plot_palette)
         
         data, keys = self.__generate_repeats(self.nodes[node]["value"])
         
@@ -375,8 +393,12 @@ class RiskProject(nx.DiGraph):
         if not os.path.exists(path):
             os.makedirs(path)
         return path
+
+    @staticmethod
+    def __node_title(node_name: str) -> str:
+        return node_name.replace("_", " ").title()
     
-    def generate_report(self, file, skip=[]):
+    def generate_report(self, file, skip=[], histogram_bins=10):
         """
         Generates a Markdown report for the current network. Automatically appends the contents of markdown files with the same name as any of the network's nodes if there are any.
 
@@ -385,19 +407,21 @@ class RiskProject(nx.DiGraph):
                 Name of the .md file to be generated.
             skip
                 A tuple with the names of the nodes generate_report will skip.
+            histogram_bins
+                Number of bins in histograms.
         """
         report = snakemd.new_doc(file)
         for node in self.nodes():
             if node not in skip and self.nodes[node]["node_type"] != "input":
-                report.add_header(node)
+                report.add_header(self.__node_title(node))
                 if os.path.exists("./" + node + ".md"):
-                    nodeinfo = open(node + ".md",'r')
-                    report.add_paragraph(nodeinfo.read())
+                    node_info = open(node + ".md",'r')
+                    report.add_paragraph(node_info.read())
 
                 if self.nodes[node]["graphtype"] == "histogram":
-                    self.generate_histogram(node, title=node, file_path="./", bins=30, legend=True)
+                    self.generate_histogram(node, title=self.__node_title(node), file_path="./", bins=histogram_bins, legend=True)
                 elif self.nodes[node]["graphtype"] == "pie":
-                    self.generate_piechart(node, title=node, file_path="./")
+                    self.generate_piechart(node, title=self.__node_title(node), file_path="./")
 
                 print(self.last_generated_graphic)
                 img = [
@@ -405,7 +429,7 @@ class RiskProject(nx.DiGraph):
                 ] 
                 report.add_element(snakemd.Paragraph(img))
                 
-                if self.nodes[node]["stats"] != None:
+                if self.nodes[node]["stats"] is not None:
                     report.add_table(
                                 ["Stats", "Values"],
                                 [

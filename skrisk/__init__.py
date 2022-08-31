@@ -1,1 +1,1 @@
-from .skrisk import *
+from .base import *

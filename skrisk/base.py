@@ -1,13 +1,15 @@
-import os
-
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import seaborn as sns
-import snakemd
-import collections
 from numpy.random import default_rng
 from scipy.stats import skew, kurtosis
+
+from .utils import generate_repeats
+from .utils import incremental_filename
+from .utils import check_path
+from .report import skrisk_report
+from .report import DEFAULT_PLOT_PALETTE, DEFAULT_PLOT_STYLE
 
 
 class RiskProject(nx.DiGraph):
@@ -24,14 +26,8 @@ class RiskProject(nx.DiGraph):
         self._seed = seed
         self.rng = default_rng(seed)
         self.nsim = nsim
-        self.plot_palette = [
-                            "#30a2da",
-                            "#fc4f30",
-                            "#e5ae38",
-                            "#6d904f",
-                            "#8b8b8b",
-                            ]
-        self.plot_style = "darkgrid"
+        self.plot_palette = DEFAULT_PLOT_PALETTE
+        self.plot_style = DEFAULT_PLOT_STYLE
 
     @property
     def seed(self):
@@ -97,7 +93,14 @@ class RiskProject(nx.DiGraph):
             name, **{"value": value, "description": description, "node_type": "input"}
         )
 
-    def add_random(self, name: str, distribution: str, parameters: tuple[str] | dict[str, object], description="", graphtype="histogram"):
+    def add_random(
+        self,
+        name: str,
+        distribution: str,
+        parameters: tuple[str] | dict[str, object],
+        description="",
+        graphtype="histogram",
+    ):
         """
         Creates a node that randomly generates observations inside a RiskProject.nsim-sized array according to the distribution specified when evaluated.
 
@@ -119,12 +122,19 @@ class RiskProject(nx.DiGraph):
                 "parameters": parameters,
                 "description": description,
                 "node_type": "random",
-                "stats" : None,
-                "graphtype" : graphtype,
+                "stats": None,
+                "graphtype": graphtype,
             },
         )
 
-    def add_decision(self, name:str, incoming_nodes: tuple[str], condition, parameters, description=""): 
+    def add_decision(
+        self,
+        name: str,
+        incoming_nodes: tuple[str],
+        condition,
+        parameters,
+        description="",
+    ):
         # TODO: Decide whenever to scrap this method, or add related functionality in the eval method.
         """
         Creates a node that represents a decision point in the network.
@@ -152,7 +162,14 @@ class RiskProject(nx.DiGraph):
         for node in incoming_nodes:
             self.add_edge(node, name)
 
-    def add_operation(self, name:str, operation:str, incoming_nodes:tuple[str], description="", graphtype="histogram"):
+    def add_operation(
+        self,
+        name: str,
+        operation: str,
+        incoming_nodes: tuple[str],
+        description="",
+        graphtype="histogram",
+    ):
         """
         Creates a node that performs an operation on incoming nodes when evaluated.
 
@@ -174,14 +191,21 @@ class RiskProject(nx.DiGraph):
                 "incoming_nodes": incoming_nodes,
                 "description": description,
                 "node_type": "operation",
-                "stats" : None,
-                "graphtype" : graphtype,
+                "stats": None,
+                "graphtype": graphtype,
             },
         )
         for node in incoming_nodes:
             self.add_edge(node, name)
 
-    def add_goal(self, name:str, operation:str, incoming_nodes:tuple[str], description="", graphtype="histogram"):
+    def add_goal(
+        self,
+        name: str,
+        operation: str,
+        incoming_nodes: tuple[str],
+        description="",
+        graphtype="histogram",
+    ):
         """
         Creates a goal/output node, which serves as an endpoint for the network.
 
@@ -203,8 +227,8 @@ class RiskProject(nx.DiGraph):
                 "incoming_nodes": incoming_nodes,
                 "description": description,
                 "node_type": "goal",
-                "stats" : None,
-                "graphtype" : graphtype,
+                "stats": None,
+                "graphtype": graphtype,
             },
         )
         for node in incoming_nodes:
@@ -234,8 +258,8 @@ class RiskProject(nx.DiGraph):
         return [
             node for node in self.nodes if self.nodes[node]["node_type"] == "random"
         ]
-        
-    def eval(self, node:str):
+
+    def eval(self, node: str):
         """
         Fills out the "value" attribute of a node, doing the same for all other nodes pointing to it if necessary.
         This method uses the function name and parameters stored in the attributes of each node to generate the relevant RiskProject.nsim-sized arrays.
@@ -256,11 +280,11 @@ class RiskProject(nx.DiGraph):
             self.nodes[node]["value"] = func(**param)
             return self.nodes[node]["value"]
 
-    def generate_stats(self, node:str, ignore=None, additional=None): 
+    def generate_stats(self, node: str, ignore=None, additional=None):
         # TODO: Add the functionality related to the ignore/additional parameters.
         """
         Generates and adds to the node an attribute named "stats" from its eval-generated value attribute.
-        
+
         Parameters
             node
                 Name of the node whose statistics will be generated.
@@ -268,7 +292,7 @@ class RiskProject(nx.DiGraph):
                 List of names of the stats that you don't want to generate.
                   additional
                 List of tuples whose first value corresponds to the name of the statistics to be generated, and the second corresponds to the function used.
-        """       
+        """
         stats = {
             "mean": np.mean(self.nodes[node]["value"], axis=0),
             "max": np.max(self.nodes[node]["value"], axis=0),
@@ -284,7 +308,7 @@ class RiskProject(nx.DiGraph):
     def print_stats(self, node: str):
         """
         Prints the stats attribute of a node inside a table.
-        
+
         Parameters
             node
                 Name of the node whose stats will be printed.
@@ -310,9 +334,11 @@ class RiskProject(nx.DiGraph):
             for i, j in self.nodes[node]["stats"].items():
                 print(str(i).ljust(longesti) + " # " + str(j).rjust(longestj))
         return
-    
-    last_generated_graphic = "" # Variable where the location of the last generated graph is stored
-    
+
+    last_generated_graphic = (
+        ""  # Variable where the location of the last generated graph is stored
+    )
+
     def generate_histogram(
         self,
         node,
@@ -333,8 +359,8 @@ class RiskProject(nx.DiGraph):
             **kwargs
                 Miscellaneous arguments for the seaborn.histplot() function.
         """
-        temp_file_path = self.__check_path(file_path)
-        hist_png_filename = self.__incremental_filename(node, temp_file_path)
+        temp_file_path = check_path(file_path)
+        hist_png_filename = incremental_filename(node, temp_file_path)
         sns.set_style(self.plot_style)
         sns.set_palette(self.plot_palette)
         sns.histplot(self.nodes[node]["value"], **kwargs).set(title=title)
@@ -342,7 +368,7 @@ class RiskProject(nx.DiGraph):
         self.last_generated_graphic = hist_png_filename
         print(f"Plot saved in file: {hist_png_filename}")
         plt.figure()
-    
+
     def generate_piechart(
         self,
         node,
@@ -353,51 +379,23 @@ class RiskProject(nx.DiGraph):
         """
         Generates a pie chart for a node.
         """
-        temp_file_path = self.__check_path(file_path)
-        hist_png_filename = self.__incremental_filename(node, temp_file_path)
+        temp_file_path = check_path(file_path)
+        hist_png_filename = incremental_filename(node, temp_file_path)
 
         sns.set_style(self.plot_style)
         sns.set_palette(self.plot_palette)
         palette = sns.color_palette(self.plot_palette)
-        
-        data, keys = self.__generate_repeats(self.nodes[node]["value"])
-        
+
+        data, keys = generate_repeats(self.nodes[node]["value"])
+
         plt.title(title)
-        plt.pie(data, labels=keys, colors=palette, autopct='%.0f%%', **kwargs)
+        plt.pie(data, labels=keys, colors=palette, autopct="%.0f%%", **kwargs)
         plt.savefig(hist_png_filename)
         self.last_generated_graphic = hist_png_filename
         print(f"Plot saved in file: {hist_png_filename}")
 
         plt.figure()
 
-    @staticmethod
-    def __generate_repeats(arr):
-        "Generates the amount of repetitions and names of values in an array in two arrays with matching indexes."
-        c = collections.Counter(arr)
-        myarr = [c[i] for i in c]
-        mylab = [str(i) for i in c]
-        return myarr, mylab
-
-    @staticmethod
-    def __incremental_filename(node, temporal_path) -> str:
-        i = 1
-        hist_png_filename = f"{temporal_path}{node}_histogram_{i}.png"
-        while os.path.exists(hist_png_filename):
-            i += 1
-            hist_png_filename = f"{temporal_path}{node}_histogram_{i}.png"
-        return hist_png_filename
-
-    @staticmethod
-    def __check_path(path) -> str:
-        path = path
-        if not os.path.exists(path):
-            os.makedirs(path)
-        return path
-
-    @staticmethod
-    def __node_title(node_name: str) -> str:
-        return node_name.replace("_", " ").title()
-    
     def generate_report(self, file, skip=[], histogram_bins=10):
         """
         Generates a Markdown report for the current network. Automatically appends the contents of markdown files with the same name as any of the network's nodes if there are any.
@@ -410,36 +408,8 @@ class RiskProject(nx.DiGraph):
             histogram_bins
                 Number of bins in histograms.
         """
-        report = snakemd.new_doc(file)
-        for node in self.nodes():
-            if node not in skip and self.nodes[node]["node_type"] != "input":
-                report.add_header(self.__node_title(node))
-                if os.path.exists("./" + node + ".md"):
-                    node_info = open(node + ".md",'r')
-                    report.add_paragraph(node_info.read())
 
-                if self.nodes[node]["graphtype"] == "histogram":
-                    self.generate_histogram(node, title=self.__node_title(node), file_path="./", bins=histogram_bins, legend=True)
-                elif self.nodes[node]["graphtype"] == "pie":
-                    self.generate_piechart(node, title=self.__node_title(node), file_path="./")
-
-                print(self.last_generated_graphic)
-                img = [
-                        snakemd.InlineText("", url=self.last_generated_graphic, image=True)
-                ] 
-                report.add_element(snakemd.Paragraph(img))
-                
-                if self.nodes[node]["stats"] is not None:
-                    report.add_table(
-                                ["Stats", "Values"],
-                                [
-                                [i,j] for i, j in self.nodes[node]["stats"].items()
-                                ]
-                            )
-                
-                report.add_paragraph(self.nodes[node]["description"])
-        report.output_page()
-        return report
+        return skrisk_report(self, file, skip, histogram_bins)
 
     def run(self):
         pass

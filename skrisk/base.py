@@ -166,7 +166,7 @@ class RiskProject(nx.DiGraph):
         self,
         name: str,
         operation: str,
-        incoming_nodes: tuple[str],
+        incoming_nodes: tuple[str, ...] | dict[str, str],
         description="",
         graphtype="histogram",
     ):
@@ -195,8 +195,12 @@ class RiskProject(nx.DiGraph):
                 "graphtype": graphtype,
             },
         )
-        for node in incoming_nodes:
-            self.add_edge(node, name)
+        if isinstance(incoming_nodes, dict):
+            for param, node in incoming_nodes.items():
+                self.add_edge(node, name, param=param)
+        else:
+            for node in incoming_nodes:
+                self.add_edge(node, name)
 
     def add_goal(
         self,
@@ -275,7 +279,13 @@ class RiskProject(nx.DiGraph):
             self.nodes[node]["value"] = func(**(self.nodes[node]["parameters"]))
             return self.nodes[node]["value"]
         else:
+            param_map = {
+                pred: self.get_edge_data(pred, node).get("param")
+                for pred in self.predecessors(node)
+                if self.get_edge_data(pred, node).get("param")
+            }
             param = {pred: self.eval(pred) for pred in self.predecessors(node)}
+            param = {param_map.get(key, key): param[key] for key in param}
             func = getattr(self, self.nodes[node]["operation"])
             self.nodes[node]["value"] = func(**param)
             return self.nodes[node]["value"]

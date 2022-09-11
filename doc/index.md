@@ -11,7 +11,11 @@ Hoy día se existen varias herramientas como las que están listadas acá: [Comp
 
 Scikit-Risk se basa de Jupyter y el ecosistema Pandas, lo cual es clave en su uso preferente para manejo de análisis de riesgo.
 
+<<<<<<< HEAD
 Los lineamientos para desarrollo de scikits están establecidos en [SciKits &mdash; SciPy.org](https://svn.scipy.org/scikits.html) 
+=======
+Los lineamientos para desarrollo de scikits están establecidos en [SciKits &mdash; SciPy.org](https://svn.scipy.org/scikits.html)
+>>>>>>> af396560b4928ca175cab5aec30b4cfe07131eb7
 
 Si deseas sumarte al trabajo que se ha realizado para esta biblioteca, debes asegurarte de:
 
@@ -37,6 +41,7 @@ We are currently in active development so we are aiming for the latest versions 
 Two things to note for those wishing to participate in scikit-risk development:
 
 1. [Github flow](https://docs.github.com/es/get-started/quickstart/github-flow) is being used as a working method.
+<<<<<<< HEAD
    
    That is, you create a project fork from [GitHub - qu4nt/scikit-risk: A python library to do Monte Carlo probabilistic modeling and risk analysis.](https://github.com/qu4nt/scikit-risk), to propose any change you create a new branch from this repository and add a Pull Request directly from this new branch.
 
@@ -49,6 +54,19 @@ Two things to note for those wishing to participate in scikit-risk development:
    From the root folder of scikit-risk
 
 
+=======
+  
+  That is, you create a project fork from [GitHub - qu4nt/scikit-risk: A python library to do Monte Carlo probabilistic modeling and risk analysis.](https://github.com/qu4nt/scikit-risk), to propose any change you create a new branch from this repository and add a Pull Request directly from this new branch.
+  
+2. To create a development environment you have to clone the repository locally, create a development environment, activate it, and run:
+  
+  ```shell
+  pip install -e .
+  ```
+  
+  From the root folder of scikit-risk
+  
+>>>>>>> af396560b4928ca175cab5aec30b4cfe07131eb7
 
 Lo mínimo que se espera es:
 
@@ -59,8 +77,16 @@ Lo mínimo que se espera es:
 
 Para el ingreso del proyecto se debería utilizar un grafo dirigido acíclico que permita indicar las relaciones entre los distintos componentes del modelo. Este gráfo sera nuestro proyecto de simulación y sobre este se realizará la simulación, y se generarán los reportes.
 
+<<<<<<< HEAD
 Otro objetivo es aprovechar al máximo las funcionalidades tanto de Pandas, Scipy como Jupyter para generar celdas interactivas, o reportes interactivos en HTML y Javascript (VUE), eso lo analizaremos más adelante.![loading-ag-102]()
 
 Scikit-Risk
 
 
+=======
+Otro objetivo es aprovechar al máximo las funcionalidades tanto de Pandas, Scipy como Jupyter para generar celdas interactivas, o reportes interactivos en HTML y Javascript (VUE), eso lo analizaremos más adelante.
+
+Scikit-Risk
+
+ 
+>>>>>>> af396560b4928ca175cab5aec30b4cfe07131eb7

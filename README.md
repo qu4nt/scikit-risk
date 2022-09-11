@@ -1,3 +1,5 @@
+![image](https://user-images.githubusercontent.com/221018/189548519-f30dff6c-74f4-4b50-943d-c411084b3a4e.png)
+
 # Scikit Risk
 
 A python library to perform Monte Carlo probabilistic modeling and risk analysis.

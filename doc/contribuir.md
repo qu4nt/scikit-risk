@@ -9,7 +9,7 @@ Los lineamientos para desarrollo de scikits están establecidos en [SciKits — 
 
 Si deseas sumarte al equipo de desarrollo, puedes contactarnos a través de [hola@qu4nt.com](mailto:hola@qu4nt.com)
 
-## [Cómo configurar un entorno de desarrollo](https://github.com/qu4nt/scikit-risk#setup-a-development-environment)
+### [Cómo configurar un entorno de desarrollo](https://github.com/qu4nt/scikit-risk#setup-a-development-environment)
 
 Para participar en el desarrollo de este proyecto, te pedimos que tengas en cuenta lo siguiente:
 
@@ -24,5 +24,3 @@ Para participar en el desarrollo de este proyecto, te pedimos que tengas en cuen
    ```
    
    desde la carpeta raíz de scikit-risk
-
-
